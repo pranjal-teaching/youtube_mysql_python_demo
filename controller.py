@@ -23,8 +23,13 @@ def add_job(job_class: str, charge_hour: float):
 
 
 def add_employee(emp_name, job_class):
-    add_employee_insert_statement = f"""INSERT INTO company.employee (emp_name, job_class) value('{emp_name}', '{job_class}');"""
-    execute_and_commit_query(add_employee_insert_statement)
+    try:
+        add_employee_insert_statement = f"""INSERT INTO company.employee (emp_name, job_class) value('{emp_name}', '{job_class}');"""
+        execute_and_commit_query(add_employee_insert_statement)
+    except Exception as e:
+        return str(e)  # not ideal
+    else:
+        return 0
 
 
 def add_project(project_name):
@@ -72,6 +77,7 @@ def remove_employee(emp_num):
     execute_and_commit_query(delete_employee_assignments_command)
     execute_and_commit_query(delete_employee_command)
 
+
 def remove_project(project_id):
     """
     Remove project by its ID
@@ -85,13 +91,28 @@ def remove_project(project_id):
     execute_and_commit_query(del_assignments)
     execute_and_commit_query(del_project)
 
+
 def remove_employee_from_project(employee_id, project_id):
     """DELETE FROM company.assignment WHERE project_num = 2 and emp_num = 3;"""
     remove_employee_from_project_query = f"DELETE FROM company.assignment WHERE project_num = {project_id} and emp_num = {employee_id};"
     execute_and_commit_query(remove_employee_from_project_query)
 
 
+def update_project_name(current_name, new_name):
+    with connect(host=hostname, user=user_name, password=pwd) as mysql_connection_object:
+        with mysql_connection_object.cursor() as mysql_cursor:
+            # Step 4: Execute the statement
+            query = f'UPDATE company.project SET project_name = "{new_name}" WHERE project_name = "{current_name}";'
+            mysql_cursor.execute(query)
+            if mysql_cursor.rowcount == 0:
+                raise ValueError(f"{current_name} does not exist")
+            # Step 5: Commit Change
+            mysql_connection_object.commit()
+
+
+
 def testing():
+    update_project_name("abc", "def")
     # add_job(job_class="J002", charge_hour=62.75)
     # add_employee(emp_name='Ron', job_class='J001')
     # add_project('funny_memes')
@@ -100,7 +121,9 @@ def testing():
     # remove_employee(emp_num=4)
     # print(get_employee_list_for_project('funny_memes'))
     # remove_project(project_id=1)
-    remove_employee_from_project(project_id=2, employee_id=3)
+    # remove_employee_from_project(project_id=2, employee_id=3)
+
+
 
 if __name__ == '__main__':
     testing()
